@@ -121,6 +121,7 @@
             letter-spacing: -0.5px;
             background: var(--gradient);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -346,9 +347,94 @@
             }
         }
 
-        /* Special Effects */
-        .shake {
-            animation: shake 0.4s ease-in-out;
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: var(--surface-light);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-save {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-cancel {
+            background: var(--surface-light);
+            color: var(--text);
         }
 
         @keyframes shake {
@@ -502,6 +588,12 @@
                 </div>
                 <h2 id="user-name">Foydalanuvchi</h2>
                 <p style="color:var(--text-dim); font-size:14px;" id="user-id">ID: ---</p>
+                <button class="btn-action"
+                    style="margin-top:16px; width:auto; padding:8px 16px; height:auto; background:var(--surface-light); box-shadow:none; font-size:12px;"
+                    onclick="openEditProfile()">
+                    <i data-lucide="edit-3" style="width:14px; height:14px;"></i>
+                    PROFILNI TAHRIRLASH
+                </button>
             </div>
 
             <div class="card">
@@ -527,6 +619,21 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div id="modal-edit-profile" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">Profilni tahrirlash</h3>
+            <div class="input-group">
+                <label>Ismingiz (Nickname)</label>
+                <input type="text" id="edit-name" class="modal-input" placeholder="Ismingizni kiriting...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="closeModal('modal-edit-profile')">Bekor qilish</button>
+                <button class="btn-modal btn-save" onclick="saveProfile()">Saqlash</button>
+            </div>
+        </div>
     </div>
 
     <!-- NAVIGATION -->
@@ -559,8 +666,10 @@
         document.body.style.backgroundColor = tg.themeParams.bg_color || '#030712';
 
         // User Data
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlName = urlParams.get('name');
         const user = tg.initDataUnsafe.user || { first_name: "O'quvchi", id: "555555" };
-        document.getElementById('user-name').innerText = user.first_name;
+        document.getElementById('user-name').innerText = urlName || user.first_name;
         document.getElementById('user-id').innerText = "ID: " + user.id;
 
         // --- GAME LOGIC ---
@@ -757,6 +866,36 @@
             // Sends data back to the bot
             tg.sendData(JSON.stringify({ action: action }));
             tg.close();
+        }
+
+        // --- PROFILE EDITING ---
+        function openEditProfile() {
+            document.getElementById('edit-name').value = document.getElementById('user-name').innerText;
+            document.getElementById('modal-edit-profile').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function saveProfile() {
+            const newName = document.getElementById('edit-name').value.trim();
+            if (!newName) {
+                tg.showAlert("Ism bo'sh bo'lishi mumkin emas!");
+                return;
+            }
+
+            // Update UI locally
+            document.getElementById('user-name').innerText = newName;
+
+            // Send to bot to save
+            tg.sendData(JSON.stringify({
+                action: "update_profile",
+                name: newName
+            }));
+
+            closeModal('modal-edit-profile');
+            tg.HapticFeedback.notificationOccurred('success');
         }
 
     </script>
