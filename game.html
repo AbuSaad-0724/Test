@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Saad English Mini Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #030712;
+            --surface: #111827;
+            --surface-light: #1f2937;
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.4);
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --text: #f9fafb;
+            --text-dim: #9ca3af;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Glassmorphism Navigation */
+        .bottom-nav {
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--card-border);
+            padding: 12px 20px 24px;
+            display: flex;
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 500;
+            gap: 4px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            width: 60px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            transform: translateY(-4px);
+        }
+
+        .nav-item i {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-item.active i {
+            filter: drop-shadow(0 0 8px var(--primary-glow));
+        }
+
+        /* Screens */
+        .screens-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px 100px;
+        }
+
+        .screen {
+            display: none;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Dashboard Header */
+        .header {
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header-title h2 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-rank {
+            background: var(--surface-light);
+            padding: 6px 12px;
+            border-radius: 99px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--card-border);
+        }
+
+        /* Premium Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+            pointer-events: none;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-box {
+            background: var(--surface-light);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Game UI */
+        .game-area {
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .word-crystal {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 40px;
+            padding: 20px 40px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 30px;
+            box-shadow: 0 0 30px var(--primary-glow);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .btn-option {
+            background: var(--surface-light);
+            border: 1px solid var(--card-border);
+            padding: 18px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-option:active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-option.correct {
+            background: var(--secondary) !important;
+            border-color: #059669;
+            color: white;
+        }
+
+        .btn-option.wrong {
+            background: #ef4444 !important;
+            border-color: #b91c1c;
+            color: white;
+        }
+
+        /* Big Button */
+        .btn-action {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(139, 92, 246, 0.3);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Quests */
+        .quest-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+
+        .quest-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(139, 92, 246, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .quest-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .quest-info p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            height: 8px;
+            background: var(--surface-light);
+            border-radius: 4px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Special Effects */
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="screens-container">
+
+        <!-- DASHBOARD -->
+        <div id="screen-home" class="screen active">
+            <div class="header">
+                <div class="header-title">
+                    <h2>Xush kelibsiz! 👋</h2>
+                    <h1>English Universe</h1>
+                </div>
+                <div class="user-rank">
+                    <i data-lucide="award" style="width:14px; height:14px; color:var(--accent);"></i>
+                    <span>LEGENDARY</span>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="xp-counter">1,240</div>
+                    <div class="stat-label">Tajriba (XP)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="streak-counter">12</div>
+                    <div class="stat-label">Kunlik Streak</div>
+                </div>
+            </div>
+
+            <div class="card" style="background: linear-gradient(rgba(139,92,246,0.1), transparent), var(--surface);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                    <div>
+                        <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;">Kunlik Missiya</h3>
+                        <p style="font-size:13px; color:var(--text-dim);">Darslarni tugatib XP oling</p>
+                    </div>
+                    <i data-lucide="target" style="color:var(--primary);"></i>
+                </div>
+                <div class="quest-item" style="background:transparent; padding:0; margin-bottom:0;">
+                    <div class="quest-info" style="width:100%;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+                            <span>Progress</span>
+                            <span>7/10 ta dars</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-fill" style="width: 70%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-size:16px; font-weight:700; margin:24px 0 16px;">🔥 Tezkor O'yinlar</h3>
+            <div class="card" onclick="switchNav('game')"
+                style="display:flex; align-items:center; gap:20px; cursor:pointer;">
+                <div class="quest-icon" style="width:60px; height:60px; background:var(--primary-glow);">
+                    <i data-lucide="zap" style="width:32px; height:32px;"></i>
+                </div>
+                <div style="flex:1;">
+                    <h4 style="font-weight:700; font-size:16px;">Vocabulary Battle</h4>
+                    <p style="color:var(--text-dim); font-size:13px;">So'zlarni moslang va XP yuting</p>
+                </div>
+                <i data-lucide="chevron-right"></i>
+            </div>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="screen-game" class="screen">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2 style="font-size:24px; font-weight:800;">Vocab Battle</h2>
+                <div id="game-xp" style="font-weight:700; color:var(--accent);">+0 XP</div>
+            </div>
+
+            <div id="game-lobby">
+                <div class="card game-area">
+                    <div style="font-size:64px; margin-bottom:24px;">🛡️</div>
+                    <h3 style="font-size:20px; font-weight:700; margin-bottom:8px;">Tayyormisiz?</h3>
+                    <p style="color:var(--text-dim); margin-bottom:32px;">60 soniya ichida maksimal so'zni toping!</p>
+                    <button class="btn-action" onclick="startGame()">BOSHLASH</button>
+                </div>
+            </div>
+
+            <div id="game-play" style="display:none;">
+                <div class="word-crystal" id="current-word">CHALLENGE</div>
+                <div class="options-grid" id="game-options">
+                    <!-- Options injected here -->
+                </div>
+                <div style="margin-top:24px; color:var(--text-dim); font-weight:600;">
+                    Vaqt: <span id="game-timer" style="color:white;">60</span> s
+                </div>
+            </div>
+        </div>
+
+        <!-- QUESTS / BOT TOOLS SCREEN -->
+        <div id="screen-quests" class="screen">
+            <h2 style="font-size:24px; font-weight:800; margin-bottom:24px;">Topshiriqlar</h2>
+
+            <div class="card">
+                <div class="quest-item">
+                    <div class="quest-icon"><i data-lucide="message-square"></i></div>
+                    <div class="quest-info">
+                        <h4>AI bilan suhbat</h4>
+                        <p>Ustoz bilan 5 daqiqa inglizcha gaplashing</p>
+                    </div>
+                </div>
+                <button class="btn-action" style="background:var(--surface-light); box-shadow:none;"
+                    onclick="botAction('ai_tutor')">
+                    BOTGA O'TISH
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="quest-item">
+                    <div class="quest-icon" style="color:var(--secondary); background:rgba(16,185,129,0.1);"><i
+                            data-lucide="check-circle"></i></div>
+                    <div class="quest-info">
+                        <h4>Grammatika Master</h4>
+                        <p>5 ta grammatik darsni yakunlang</p>
+                    </div>
+                </div>
+                <button class="btn-action" style="background:var(--surface-light); box-shadow:none;"
+                    onclick="botAction('lessons')">
+                    DARSLARGA O'TISH
+                </button>
+            </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div id="screen-profile" class="screen">
+            <div style="text-align:center; padding:20px 0;">
+                <div
+                    style="width:100px; height:100px; border-radius:50%; background:var(--gradient); margin:0 auto 16px; display:flex; align-items:center; justify-content:center; border:4px solid var(--surface-light);">
+                    <i data-lucide="user" style="width:48px; height:48px; color:white;"></i>
+                </div>
+                <h2 id="user-name">Foydalanuvchi</h2>
+                <p style="color:var(--text-dim); font-size:14px;" id="user-id">ID: ---</p>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size:16px; font-weight:700; margin-bottom:16px;">Yutuqlar</h3>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;">
+                    <div
+                        style="aspect-ratio:1; border-radius:12px; background:var(--surface-light); display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="zap" style="color:var(--accent);"></i>
+                    </div>
+                    <div
+                        style="aspect-ratio:1; border-radius:12px; background:var(--surface-light); display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="shield" style="color:var(--primary);"></i>
+                    </div>
+                    <div
+                        style="aspect-ratio:1; border-radius:12px; background:var(--surface-light); display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="star" style="color:var(--accent);"></i>
+                    </div>
+                    <div
+                        style="aspect-ratio:1; border-radius:12px; background:var(--surface-light); display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="flame" style="color:#ef4444;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchNav('home')">
+            <i data-lucide="layout-grid"></i>
+            <span>Markaz</span>
+        </div>
+        <div class="nav-item" onclick="switchNav('game')">
+            <i data-lucide="swords"></i>
+            <span>Jang</span>
+        </div>
+        <div class="nav-item" onclick="switchNav('quests')">
+            <i data-lucide="scroll-text"></i>
+            <span>Missiya</span>
+        </div>
+        <div class="nav-item" onclick="switchNav('profile')">
+            <i data-lucide="user-circle"></i>
+            <span>Profil</span>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+        lucide.createIcons();
+
+        // Theme sync
+        document.body.style.backgroundColor = tg.themeParams.bg_color || '#030712';
+
+        // User Data
+        const user = tg.initDataUnsafe.user || { first_name: "O'quvchi", id: "555555" };
+        document.getElementById('user-name').innerText = user.first_name;
+        document.getElementById('user-id').innerText = "ID: " + user.id;
+
+        // --- GAME LOGIC ---
+        // So'zlar bazasi (vocabulary_db.json dan olindi)
+        const VOCAB = [
+            { "en": "Ability", "uz": "Qobiliyat" },
+            { "en": "About", "uz": "Haqida" },
+            { "en": "Accept", "uz": "Qabul qilmoq" },
+            { "en": "Account", "uz": "Hisob" },
+            { "en": "Action", "uz": "Harakat" },
+            { "en": "Activity", "uz": "Faoliyat" },
+            { "en": "Actor", "uz": "Aktyor" },
+            { "en": "Add", "uz": "Qo'shmoq" },
+            { "en": "Address", "uz": "Manzil" },
+            { "en": "Adult", "uz": "Katta yoshli" },
+            { "en": "Advice", "uz": "Maslahat" },
+            { "en": "Afraid", "uz": "Qo'rqqan" },
+            { "en": "Agency", "uz": "Agentlik" },
+            { "en": "Agree", "uz": "Rozi bo'lmoq" },
+            { "en": "Air", "uz": "Havo" },
+            { "en": "Airport", "uz": "Aeroport" },
+            { "en": "Allow", "uz": "Ruxsat bermoq" },
+            { "en": "Almost", "uz": "Deyarli" },
+            { "en": "Alone", "uz": "Yolg'iz" },
+            { "en": "Always", "uz": "Doim" },
+            { "en": "Amazing", "uz": "Ajoyib" },
+            { "en": "Ambition", "uz": "Maqsad" },
+            { "en": "Ancient", "uz": "Qadimiy" },
+            { "en": "Anger", "uz": "G'azab" },
+            { "en": "Animal", "uz": "Hayvon" },
+            { "en": "Answer", "uz": "Javob" },
+            { "en": "Apple", "uz": "Olma" },
+            { "en": "Apply", "uz": "Ariza topshirmoq" },
+            { "en": "Area", "uz": "Hudud" },
+            { "en": "Argue", "uz": "Tortishmoq" },
+            { "en": "Arm", "uz": "Qo'l" },
+            { "en": "Army", "uz": "Armiya" },
+            { "en": "Around", "uz": "Atrofida" },
+            { "en": "Arrive", "uz": "Kelmoq" },
+            { "en": "Art", "uz": "San'at" },
+            { "en": "Article", "uz": "Maqola" },
+            { "en": "Artist", "uz": "Rassom" },
+            { "en": "Ask", "uz": "So'ramoq" },
+            { "en": "Assume", "uz": "Faraz qilmoq" },
+            { "en": "Attack", "uz": "Hujum" },
+            { "en": "Attention", "uz": "Diqqat" },
+            { "en": "Author", "uz": "Muallif" },
+            { "en": "Available", "uz": "Mavjud" },
+            { "en": "Avoid", "uz": "O'zini olib qochmoq" },
+            { "en": "Baby", "uz": "Chaqaloq" },
+            { "en": "Back", "uz": "Orqa" },
+            { "en": "Bad", "uz": "Yomon" },
+            { "en": "Bag", "uz": "Sumka" },
+            { "en": "Ball", "uz": "To'p" },
+            { "en": "Banana", "uz": "Banan" },
+            { "en": "Bank", "uz": "Bank" },
+            { "en": "Bar", "uz": "Bar" },
+            { "en": "Base", "uz": "Asos" },
+            { "en": "Basic", "uz": "Boshlang'ich" },
+            { "en": "Basis", "uz": "Asos" },
+            { "en": "Basket", "uz": "Savat" },
+            { "en": "Battery", "uz": "Batareya" },
+            { "en": "Battle", "uz": "Jang" },
+            { "en": "Beach", "uz": "Sohil" },
+            { "en": "Bear", "uz": "Ayiq" },
+            { "en": "Beat", "uz": "Urmoq" },
+            { "en": "Beautiful", "uz": "Chiroyli" },
+            { "en": "Beauty", "uz": "Go'zallik" },
+            { "en": "Because", "uz": "Chunki" },
+            { "en": "Become", "uz": "Bo'lmoq" },
+            { "en": "Believe", "uz": "Ishonmoq" },
+            { "en": "Collaborate", "uz": "Hamkorlik qilmoq" },
+            { "en": "Determine", "uz": "Aniqlamoq" },
+            { "en": "Effort", "uz": "Harakat/G'ayrat" },
+            { "en": "Flourish", "uz": "Gullab-yashnamoq" },
+            { "en": "Gratitude", "uz": "Minnatdorchilik" },
+            { "en": "Humble", "uz": "Kamtar" },
+            { "en": "Innocent", "uz": "Aybsiz" },
+            { "en": "Journey", "uz": "Sayohat" },
+            { "en": "Knowledge", "uz": "Bilim" },
+            { "en": "Loyal", "uz": "Sodiq" },
+            { "en": "Magnificent", "uz": "Hashamatli" },
+            { "en": "Narrative", "uz": "Hikoya qilish" },
+            { "en": "Obvious", "uz": "Aniq/Ravshan" },
+            { "en": "Patience", "uz": "Sabr-toqat" }
+        ];
+
+        let gameXP = 0;
+        let timeLeft = 60;
+        let timerId = null;
+
+        function startGame() {
+            document.getElementById('game-lobby').style.display = 'none';
+            document.getElementById('game-play').style.display = 'block';
+            gameXP = 0;
+            timeLeft = 60;
+            updateXP(0);
+            startTimer();
+            nextRound();
+        }
+
+        function startTimer() {
+            timerId = setInterval(() => {
+                timeLeft--;
+                document.getElementById('game-timer').innerText = timeLeft;
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function nextRound() {
+            const current = VOCAB[Math.floor(Math.random() * VOCAB.length)];
+            document.getElementById('current-word').innerText = current.en;
+
+            const options = [current.uz];
+            while (options.length < 4) {
+                const r = VOCAB[Math.floor(Math.random() * VOCAB.length)].uz;
+                if (!options.includes(r)) options.push(r);
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            const grid = document.getElementById('game-options');
+            grid.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerHTML = `${opt} <i data-lucide="chevron-right" style="width:16px;"></i>`;
+                btn.onclick = () => checkAnswer(opt, current.uz, btn);
+                grid.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function checkAnswer(selected, correct, btn) {
+            if (selected === correct) {
+                btn.classList.add('correct');
+                tg.HapticFeedback.notificationOccurred('success');
+                gameXP += 10;
+                updateXP(gameXP);
+                setTimeout(nextRound, 500);
+            } else {
+                btn.classList.add('wrong');
+                document.getElementById('game-play').classList.add('shake');
+                tg.HapticFeedback.notificationOccurred('error');
+                setTimeout(() => {
+                    document.getElementById('game-play').classList.remove('shake');
+                    nextRound();
+                }, 500);
+            }
+        }
+
+        function updateXP(val) {
+            document.getElementById('game-xp').innerText = `+${val} XP`;
+        }
+
+        function endGame() {
+            clearInterval(timerId);
+            tg.HapticFeedback.impactOccurred('heavy');
+
+            // Show confirmation dialog with SweetAlert-like system or standard confirm
+            const shouldSave = confirm(`O'yin tugadi! 🎉\nTopilgan daromad: ${gameXP} XP.\n\nNatijani bot profiliga saqlaymizmi?`);
+
+            if (shouldSave) {
+                // Send data to Bot
+                tg.sendData(JSON.stringify({
+                    action: "game_end",
+                    xp: gameXP
+                }));
+                // tg.close() happens automatically after sendData usually, or we can close manually
+                // But typically sendData closes the WebApp.
+            } else {
+                gameXP = 0;
+                document.getElementById('game-lobby').style.display = 'block';
+                document.getElementById('game-play').style.display = 'none';
+            }
+        }
+
+        // --- NAVIGATION ---
+        function switchNav(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const items = document.querySelectorAll('.nav-item');
+            if (screenId === 'home') items[0].classList.add('active');
+            if (screenId === 'game') items[1].classList.add('active');
+            if (screenId === 'quests') items[2].classList.add('active');
+            if (screenId === 'profile') items[3].classList.add('active');
+
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        // --- BOT INTEGRATION ---
+        function botAction(action) {
+            // Sends data back to the bot
+            tg.sendData(JSON.stringify({ action: action }));
+            tg.close();
+        }
+
+    </script>
+</body>
+
+</html>
