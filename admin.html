@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - English Universe</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #030712;
+            --surface: #111827;
+            --surface-light: #1f2937;
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.4);
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --text: #f9fafb;
+            --text-dim: #9ca3af;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 16px 20px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Screens Container */
+        .screens-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 80px;
+        }
+
+        .screen {
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--surface-light);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        /* Input Fields */
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: var(--surface-light);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: var(--primary);
+        }
+
+        textarea.modal-input {
+            resize: none;
+            min-height: 100px;
+        }
+
+        /* Grid Buttons */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+            background: var(--surface-light);
+        }
+
+        .action-btn i {
+            width: 32px;
+            height: 32px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .action-btn span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* User List */
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--surface-light);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-meta {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .user-stats {
+            text-align: right;
+        }
+
+        .user-xp {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .user-level {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 16px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--surface-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* Navigation */
+        .bottom-nav {
+            background: rgba(3, 7, 18, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--card-border);
+            padding: 12px 20px 24px;
+            display: flex;
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 10px;
+            font-weight: 500;
+            gap: 4px;
+            cursor: pointer;
+            width: 60px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface-light);
+            border: 1px solid var(--primary);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            z-index: 2000;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: var(--text-dim);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--surface-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* File Upload */
+        .file-drop {
+            border: 2px dashed var(--card-border);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .file-drop:active {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .file-drop i {
+            width: 48px;
+            height: 48px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        .file-drop p {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        /* Chart placeholder */
+        .chart-container {
+            background: var(--surface-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .chart-label {
+            width: 60px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .chart-value {
+            flex: 1;
+            height: 24px;
+            background: var(--surface);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 12px;
+        }
+
+        .chart-fill {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 4px;
+        }
+
+        .chart-count {
+            width: 40px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>👨‍💼 Admin Panel</h1>
+        <div class="header-actions">
+            <button class="btn-secondary" style="width:auto; padding:8px 16px;" onclick="refreshData()">
+                <i data-lucide="refresh-cw" style="width:16px; height:16px;"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="total-users">0</div>
+            <div class="stat-label">👥 Foydalanuvchilar</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="total-lessons">0</div>
+            <div class="stat-label">📚 Darslar</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="total-xp">0</div>
+            <div class="stat-label">💰 Jami XP</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="active-today">0</div>
+            <div class="stat-label">🔥 Bugun faol</div>
+        </div>
+    </div>
+
+    <!-- Screens Container -->
+    <div class="screens-container">
+        <!-- Dashboard Screen -->
+        <div id="screen-dashboard" class="screen active">
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="bar-chart-2" style="color:var(--primary);"></i>
+                    Haftalik faollik
+                </div>
+                <div class="chart-container" id="weekly-chart">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="trophy" style="color:var(--accent);"></i>
+                    Top 10 foydalanuvchilar
+                </div>
+                <div id="top-users">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="pie-chart" style="color:var(--secondary);"></i>
+                    Daraja tarqalishi
+                </div>
+                <div id="level-distribution">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Screen -->
+        <div id="screen-users" class="screen">
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="users" style="color:var(--primary);"></i>
+                    Barcha foydalanuvchilar
+                </div>
+                <div class="input-group">
+                    <input type="text" class="modal-input" placeholder="Qidirish..." id="user-search" oninput="searchUsers()">
+                </div>
+                <div id="all-users-list">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Broadcast Screen -->
+        <div id="screen-broadcast" class="screen">
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="megaphone" style="color:var(--accent);"></i>
+                    Xabar yuborish
+                </div>
+                <div class="input-group">
+                    <label>Xabar matni</label>
+                    <textarea class="modal-input" id="broadcast-message" placeholder="Xabaringizni yozing..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Target</label>
+                    <select class="modal-input" id="broadcast-target">
+                        <option value="all">Barcha foydalanuvchilar</option>
+                        <option value="active">Faol foydalanuvchilar</option>
+                        <option value="new">Yangi foydalanuvchilar</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" onclick="sendBroadcast()">
+                    <i data-lucide="send" style="width:18px; height:18px;"></i>
+                    Yuborish
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="history" style="color:var(--text-dim);"></i>
+                    Yuborilgan xabarlar
+                </div>
+                <div id="broadcast-history">
+                    <p style="color:var(--text-dim); font-size:13px;">Hali xabar yuborilmagan</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Screen -->
+        <div id="screen-content" class="screen">
+            <div class="action-grid">
+                <div class="action-btn" onclick="openModal('modal-add-lesson')">
+                    <i data-lucide="book-open"></i>
+                    <span>Dars qo'shish</span>
+                </div>
+                <div class="action-btn" onclick="openModal('modal-add-vocab')">
+                    <i data-lucide="languages"></i>
+                    <span>Lug'at qo'shish</span>
+                </div>
+                <div class="action-btn" onclick="openModal('modal-upload-media')">
+                    <i data-lucide="upload-cloud"></i>
+                    <span>Media yuklash</span>
+                </div>
+                <div class="action-btn" onclick="reloadDatabase()">
+                    <i data-lucide="database"></i>
+                    <span>DB yangilash</span>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+                <div class="card-title">
+                    <i data-lucide="file-text" style="color:var(--secondary);"></i>
+                    So'nggi darslar
+                </div>
+                <div id="recent-lessons">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="screen-settings" class="screen">
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="settings" style="color:var(--primary);"></i>
+                    Bot sozlamalari
+                </div>
+                <div class="input-group">
+                    <label>Game WebApp URL</label>
+                    <input type="text" class="modal-input" id="game-url" placeholder="https://...">
+                </div>
+                <button class="btn" onclick="saveSettings()">
+                    <i data-lucide="save" style="width:18px; height:18px;"></i>
+                    Saqlash
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="shield" style="color:var(--accent);"></i>
+                    Xavfsizlik
+                </div>
+                <div class="input-group">
+                    <label>Admin ID qo'shish</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" class="modal-input" id="new-admin-id" placeholder="User ID">
+                        <button class="btn" style="width:auto;" onclick="addAdmin()">+</button>
+                    </div>
+                </div>
+                <div id="admin-list" style="margin-top:12px;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="color:var(--danger);">
+                    <i data-lucide="trash-2"></i>
+                    Xavfli amallar
+                </div>
+                <button class="btn btn-danger" onclick="clearAllData()">
+                    <i data-lucide="alert-triangle" style="width:18px; height:18px;"></i>
+                    Barcha ma'lumotlarni tozalash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchNav('dashboard')">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="switchNav('users')">
+            <i data-lucide="users"></i>
+            <span>Foydalanuvchilar</span>
+        </div>
+        <div class="nav-item" onclick="switchNav('broadcast')">
+            <i data-lucide="megaphone"></i>
+            <span>Xabar</span>
+        </div>
+        <div class="nav-item" onclick="switchNav('content')">
+            <i data-lucide="file-content"></i>
+            <span>Kontent</span>
+        </div>
+        <div class="nav-item" onclick="switchNav('settings')">
+            <i data-lucide="settings"></i>
+            <span>Sozlamalar</span>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal: Add Lesson -->
+    <div id="modal-add-lesson" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Yangi dars qo'shish</h3>
+                <button class="modal-close" onclick="closeModal('modal-add-lesson')">✕</button>
+            </div>
+            <div class="input-group">
+                <label>Sarlavha</label>
+                <input type="text" class="modal-input" id="lesson-title" placeholder="Dars sarlavhasi">
+            </div>
+            <div class="input-group">
+                <label>Daraja</label>
+                <select class="modal-input" id="lesson-level">
+                    <option value="A1">A1 - Beginner</option>
+                    <option value="A2">A2 - Elementary</option>
+                    <option value="B1">B1 - Intermediate</option>
+                    <option value="B2">B2 - Upper Intermediate</option>
+                    <option value="C1">C1 - Advanced</option>
+                    <option value="C2">C2 - Proficient</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Kategoriya</label>
+                <select class="modal-input" id="lesson-category">
+                    <option value="grammar">Grammar</option>
+                    <option value="vocab">Vocabulary</option>
+                    <option value="speaking">Speaking</option>
+                    <option value="listening">Listening</option>
+                    <option value="writing">Writing</option>
+                    <option value="test">Test</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Kontent (HTML)</label>
+                <textarea class="modal-input" id="lesson-content" style="min-height:150px;" placeholder="<h3>...</h3><p>...</p>"></textarea>
+            </div>
+            <button class="btn" onclick="addLesson()">
+                <i data-lucide="plus" style="width:18px; height:18px;"></i>
+                Qo'shish
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Upload Media -->
+    <div id="modal-upload-media" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Media yuklash</h3>
+                <button class="modal-close" onclick="closeModal('modal-upload-media')">✕</button>
+            </div>
+            <div class="file-drop" onclick="document.getElementById('media-file').click()">
+                <i data-lucide="cloud-upload"></i>
+                <p>Faylni tanlang yoki bu yerga bosing</p>
+                <input type="file" id="media-file" style="display:none;" onchange="handleFileUpload(this)">
+            </div>
+            <div class="input-group" style="margin-top:16px;">
+                <label>Fayl nomi</label>
+                <input type="text" class="modal-input" id="media-name" placeholder="Fayl nomi">
+            </div>
+            <div class="input-group">
+                <label>Turi</label>
+                <select class="modal-input" id="media-type">
+                    <option value="pdf">PDF</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                </select>
+            </div>
+            <button class="btn" onclick="uploadMedia()">
+                <i data-lucide="upload" style="width:18px; height:18px;"></i>
+                Yuklash
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        lucide.createIcons();
+
+        // State
+        let users = {};
+        let lessons = [];
+        let stats = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshData();
+        });
+
+        function switchNav(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const navs = document.querySelectorAll('.nav-item');
+            const navMap = { 'dashboard': 0, 'users': 1, 'broadcast': 2, 'content': 3, 'settings': 4 };
+            navs[navMap[screenId]].classList.add('active');
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function refreshData() {
+            tg.sendData(JSON.stringify({ action: 'admin_get_stats' }));
+            showToast('Yangilanmoqda...');
+        }
+
+        // Receive data from bot
+        tg.onEvent('web_app_data', (data) => {
+            try {
+                const response = JSON.parse(data.data);
+                if (response.action === 'admin_stats') {
+                    updateDashboard(response.data);
+                }
+            } catch (e) {
+                console.error('Data parse error:', e);
+            }
+        });
+
+        function updateDashboard(data) {
+            stats = data;
+            users = data.users || {};
+            lessons = data.lessons || [];
+
+            // Update stats cards
+            document.getElementById('total-users').innerText = Object.keys(users).length;
+            document.getElementById('total-lessons').innerText = lessons.length;
+            
+            let totalXP = 0;
+            let activeToday = 0;
+            const today = new Date().toISOString().split('T')[0];
+            
+            Object.values(users).forEach(u => {
+                totalXP += u.balance || 0;
+                if (u.joined_at === today) activeToday++;
+            });
+            
+            document.getElementById('total-xp').innerText = totalXP.toLocaleString();
+            document.getElementById('active-today').innerText = activeToday;
+
+            // Update charts
+            renderWeeklyChart();
+            renderTopUsers();
+            renderLevelDistribution();
+            renderRecentLessons();
+            renderAllUsers();
+        }
+
+        function renderWeeklyChart() {
+            const days = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+            const counts = [12, 19, 15, 25, 22, 30, 18]; // Mock data
+            const max = Math.max(...counts);
+            
+            let html = '';
+            days.forEach((day, i) => {
+                const width = (counts[i] / max) * 100;
+                html += `
+                    <div class="chart-bar">
+                        <span class="chart-label">${day}</span>
+                        <div class="chart-value">
+                            <div class="chart-fill" style="width:${width}%"></div>
+                        </div>
+                        <span class="chart-count">${counts[i]}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('weekly-chart').innerHTML = html;
+        }
+
+        function renderTopUsers() {
+            const sorted = Object.entries(users)
+                .sort((a, b) => (b[1].balance || 0) - (a[1].balance || 0))
+                .slice(0, 10);
+
+            let html = '';
+            sorted.forEach(([id, user], i) => {
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+                html += `
+                    <div class="user-item">
+                        <div class="user-info">
+                            <div class="user-name">${medal} ${user.nickname || 'User_' + id.slice(0,4)}</div>
+                            <div class="user-meta">Level: ${user.level || 'N/A'}</div>
+                        </div>
+                        <div class="user-stats">
+                            <div class="user-xp">${(user.balance || 0)} XP</div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('top-users').innerHTML = html || '<p style="color:var(--text-dim);">Foydalanuvchilar yoq</p>';
+        }
+
+        function renderLevelDistribution() {
+            const levels = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 };
+            Object.values(users).forEach(u => {
+                if (levels[u.level] !== undefined) levels[u.level]++;
+            });
+
+            let html = '';
+            const max = Math.max(...Object.values(levels)) || 1;
+            Object.entries(levels).forEach(([lvl, count]) => {
+                const width = (count / max) * 100;
+                html += `
+                    <div class="chart-bar">
+                        <span class="chart-label">${lvl}</span>
+                        <div class="chart-value">
+                            <div class="chart-fill" style="width:${width}%"></div>
+                        </div>
+                        <span class="chart-count">${count}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('level-distribution').innerHTML = html;
+        }
+
+        function renderRecentLessons() {
+            const recent = lessons.slice(-5).reverse();
+            let html = '';
+            recent.forEach(l => {
+                html += `
+                    <div class="user-item">
+                        <div class="user-info">
+                            <div class="user-name">${l.title}</div>
+                            <div class="user-meta">${l.level} • ${l.category}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('recent-lessons').innerHTML = html || '<p style="color:var(--text-dim);">Darslar yoq</p>';
+        }
+
+        function renderAllUsers() {
+            let html = '';
+            Object.entries(users).forEach(([id, user]) => {
+                html += `
+                    <div class="user-item" data-user-id="${id}">
+                        <div class="user-info">
+                            <div class="user-name">${user.nickname || 'User_' + id.slice(0,4)}</div>
+                            <div class="user-meta">ID: ${id} • Joined: ${user.joined_at}</div>
+                        </div>
+                        <div class="user-stats">
+                            <div class="user-xp">${user.balance || 0} XP</div>
+                            <div class="user-level">${user.level || 'No level'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('all-users-list').innerHTML = html || '<p style="color:var(--text-dim);">Foydalanuvchilar yoq</p>';
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('user-search').value.toLowerCase();
+            document.querySelectorAll('#all-users-list .user-item').forEach(item => {
+                const name = item.querySelector('.user-name').innerText.toLowerCase();
+                item.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function sendBroadcast() {
+            const message = document.getElementById('broadcast-message').value;
+            const target = document.getElementById('broadcast-target').value;
+            
+            if (!message) {
+                showToast('Xabar matnini kiriting!');
+                return;
+            }
+
+            tg.sendData(JSON.stringify({
+                action: 'admin_broadcast',
+                message: message,
+                target: target
+            }));
+            
+            document.getElementById('broadcast-message').value = '';
+            showToast('Xabar yuborildi!');
+        }
+
+        function addLesson() {
+            const title = document.getElementById('lesson-title').value;
+            const level = document.getElementById('lesson-level').value;
+            const category = document.getElementById('lesson-category').value;
+            const content = document.getElementById('lesson-content').value;
+
+            if (!title || !content) {
+                showToast('Sarlavha va kontent majburiy!');
+                return;
+            }
+
+            tg.sendData(JSON.stringify({
+                action: 'admin_add_lesson',
+                lesson: {
+                    id: 'custom_' + Date.now(),
+                    title,
+                    level,
+                    category,
+                    content
+                }
+            }));
+
+            closeModal('modal-add-lesson');
+            showToast('Dars qoshildi!');
+        }
+
+        function uploadMedia() {
+            const name = document.getElementById('media-name').value;
+            const type = document.getElementById('media-type').value;
+            
+            if (!name) {
+                showToast('Fayl nomini kiriting!');
+                return;
+            }
+
+            tg.sendData(JSON.stringify({
+                action: 'admin_upload_media',
+                media: { name, type }
+            }));
+
+            closeModal('modal-upload-media');
+            showToast('Media yuklandi!');
+        }
+
+        function handleFileUpload(input) {
+            if (input.files.length > 0) {
+                document.getElementById('media-name').value = input.files[0].name;
+            }
+        }
+
+        function reloadDatabase() {
+            tg.sendData(JSON.stringify({ action: 'admin_reload_db' }));
+            showToast('Database yangilandi!');
+        }
+
+        function saveSettings() {
+            const gameUrl = document.getElementById('game-url').value;
+            tg.sendData(JSON.stringify({
+                action: 'admin_save_settings',
+                settings: { game_webapp_url: gameUrl }
+            }));
+            showToast('Sozlamalar saqlandi!');
+        }
+
+        function addAdmin() {
+            const adminId = document.getElementById('new-admin-id').value;
+            if (!adminId) {
+                showToast('Admin ID kiriting!');
+                return;
+            }
+            
+            tg.sendData(JSON.stringify({
+                action: 'admin_add',
+                user_id: parseInt(adminId)
+            }));
+            
+            document.getElementById('new-admin-id').value = '';
+            showToast('Admin qoshildi!');
+        }
+
+        function clearAllData() {
+            if (confirm('Haqiqatan ham barcha ma\'lumotlarni tozalamoqchisiz? Bu amallarni ortga qaytarib bo\'lmaydi!')) {
+                tg.sendData(JSON.stringify({ action: 'admin_clear_all' }));
+                showToast('Ma\'lumotlar tozalandi!');
+            }
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Close modal on backdrop click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

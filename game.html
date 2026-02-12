@@ -347,6 +347,74 @@
             }
         }
 
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            50% { transform: scale(1.2) rotate(5deg); }
+            75% { transform: scale(1.1) rotate(-5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        @keyframes scorePopup {
+            0% { opacity: 0; transform: translateY(20px) scale(0.5); }
+            50% { opacity: 1; transform: translateY(-10px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-30px) scale(1); }
+        }
+
+        .score-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--secondary);
+            text-shadow: 0 0 20px var(--secondary);
+            pointer-events: none;
+            z-index: 2000;
+            animation: scorePopup 1s ease-out forwards;
+        }
+
+        .combo-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--accent);
+            text-shadow: 0 0 30px var(--accent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .combo-display.active {
+            opacity: 1;
+            animation: pulse 0.5s ease-in-out;
+        }
+
         /* Modal */
         .modal {
             display: none;
@@ -520,32 +588,185 @@
 
         <!-- GAME SCREEN -->
         <div id="screen-game" class="screen">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <h2 style="font-size:24px; font-weight:800;">Vocab Battle</h2>
                 <div id="game-xp" style="font-weight:700; color:var(--accent);">+0 XP</div>
+            </div>
+
+            <!-- Game Stats Bar -->
+            <div style="display:flex; gap:16px; margin-bottom:16px;">
+                <div class="stat-box" style="flex:1;">
+                    <div class="stat-value" id="game-streak" style="color:var(--accent);">0</div>
+                    <div class="stat-label">🔥 Streak</div>
+                </div>
+                <div class="stat-box" style="flex:1;">
+                    <div class="stat-value" id="game-combo" style="color:var(--secondary);">x1</div>
+                    <div class="stat-label">⚡ Combo</div>
+                </div>
+                <div class="stat-box" style="flex:1;">
+                    <div class="stat-value" id="game-score">0</div>
+                    <div class="stat-label">🎯 Score</div>
+                </div>
+            </div>
+
+            <!-- Mode Selection -->
+            <div id="game-modes" style="margin-bottom:16px;">
+                <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">O'YIN REJIMI:</p>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-option active" id="mode-classic" onclick="selectMode('classic')" style="flex:1; text-align:center;">🎯 Classic</button>
+                    <button class="btn-option" id="mode-speed" onclick="selectMode('speed')" style="flex:1; text-align:center;">⚡ Speed</button>
+                    <button class="btn-option" id="mode-flash" onclick="selectMode('flash')" style="flex:1; text-align:center;">⚡ Flash</button>
+                </div>
+            </div>
+
+            <!-- Difficulty Selection -->
+            <div id="game-difficulty" style="margin-bottom:16px;">
+                <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">QIYINCHILIK:</p>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-option active" id="diff-easy" onclick="selectDifficulty('easy')" style="flex:1; text-align:center; color:var(--secondary);">🟢 Oson</button>
+                    <button class="btn-option" id="diff-medium" onclick="selectDifficulty('medium')" style="flex:1; text-align:center; color:var(--accent);">🟡 O'rtacha</button>
+                    <button class="btn-option" id="diff-hard" onclick="selectDifficulty('hard')" style="flex:1; text-align:center; color:#ef4444;">🔴 Qiyin</button>
+                </div>
             </div>
 
             <div id="game-lobby">
                 <div class="card game-area">
                     <div style="font-size:64px; margin-bottom:24px;">🛡️</div>
                     <h3 style="font-size:20px; font-weight:700; margin-bottom:8px;">Tayyormisiz?</h3>
-                    <p style="color:var(--text-dim); margin-bottom:32px;">60 soniya ichida maksimal so'zni toping!</p>
-                    <button class="btn-action" onclick="startGame()">BOSHLASH</button>
+                    <p style="color:var(--text-dim); margin-bottom:32px;"><span id="mode-desc">To'g'ri javobni tanlang!</span></p>
+                    <button class="btn-action" onclick="startGame()">🚀 BOSHLASH</button>
                 </div>
             </div>
 
             <div id="game-play" style="display:none;">
                 <div class="word-crystal" id="current-word">CHALLENGE</div>
+                <div class="combo-display" id="combo-display">x2 COMBO!</div>
                 <div class="options-grid" id="game-options">
                     <!-- Options injected here -->
                 </div>
-                <div style="margin-top:24px; color:var(--text-dim); font-weight:600;">
-                    Vaqt: <span id="game-timer" style="color:white;">60</span> s
+                <div style="margin-top:24px; display:flex; justify-content:space-between; color:var(--text-dim); font-weight:600;">
+                    <span>💬 <span id="question-num">1/10</span></span>
+                    <span>⏱️ <span id="game-timer" style="color:white;">60</span>s</span>
+                </div>
+            </div>
+
+            <!-- End Game Screen -->
+            <div id="game-end" style="display:none;">
+                <div class="card" style="text-align:center; padding:32px;">
+                    <div style="font-size:64px; margin-bottom:16px;">🎉</div>
+                    <h2 style="font-size:28px; font-weight:800; margin-bottom:8px;">Ajoyib!</h2>
+                    <p style="color:var(--text-dim); margin-bottom:24px;">O'yin yakunlandi!</p>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px;">
+                        <div class="stat-box">
+                            <div class="stat-value" id="end-score" style="color:var(--accent);">0</div>
+                            <div class="stat-label">💰 XP</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="end-accuracy" style="color:var(--secondary);">0%</div>
+                            <div class="stat-label">🎯 Aniqlik</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="end-streak" style="color:var(--primary);">0</div>
+                            <div class="stat-label">🔥 Max Streak</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="end-level" style="color:#f59e0b;">-</div>
+                            <div class="stat-label">🏆 Level</div>
+                        </div>
+                    </div>
+                    
+                    <div id="achievement-unlock" style="display:none; margin-bottom:24px; padding:16px; background:linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.2)); border-radius:16px; border:1px solid var(--primary);">
+                        <div style="font-size:32px; margin-bottom:8px;">🏆</div>
+                        <div style="font-weight:700; color:var(--primary);">Yutuq Ochildi!</div>
+                        <div id="achievement-name" style="font-size:14px; margin-top:4px;"></div>
+                    </div>
+                    
+                    <button class="btn-action" onclick="restartGame()">🔄 QAYTA O'YNASH</button>
+                    <button class="btn-action" style="background:var(--surface-light); margin-top:12px;" onclick="switchNav('home')">🏠 ASOSIY SAHIFA</button>
                 </div>
             </div>
         </div>
 
-        <!-- QUESTS / BOT TOOLS SCREEN -->
+        <!-- GRAMMAR QUIZ SCREEN -->
+        <div id="screen-grammar" class="screen">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+                <button class="btn-option" style="width:auto; padding:8px 16px;" onclick="switchNav('quests')">
+                    ◀️ Orqaga
+                </button>
+                <h2 style="font-size:24px; font-weight:800;">📖 Grammar Quiz</h2>
+            </div>
+
+            <div id="grammar-lobby">
+                <div class="card">
+                    <div style="text-align:center; margin-bottom:24px;">
+                        <div style="font-size:48px; margin-bottom:16px;">📝</div>
+                        <h3 style="font-size:20px; font-weight:700;">Grammatik Maxlor</h3>
+                        <p style="color:var(--text-dim); font-size:14px; margin-top:8px;"> Ingliz tili grammatikasini sinab ko'ring!</p>
+                    </div>
+                    
+                    <div style="margin-bottom:24px;">
+                        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">QIYINCHILIK:</p>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-option active" id="grammar-diff-easy" onclick="selectGrammarDiff('easy')" style="flex:1; text-align:center;">🟢 A1-A2</button>
+                            <button class="btn-option" id="grammar-diff-medium" onclick="selectGrammarDiff('medium')" style="flex:1; text-align:center;">🟡 B1-B2</button>
+                            <button class="btn-option" id="grammar-diff-hard" onclick="selectGrammarDiff('hard')" style="flex:1; text-align:center;">🔴 C1-C2</button>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-action" onclick="startGrammarQuiz()">🚀 BOSHLASH</button>
+                </div>
+            </div>
+
+            <div id="grammar-play" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span style="font-size:14px; color:var(--text-dim);">📖 Grammar Quiz</span>
+                    <span style="font-size:14px; font-weight:600;"><span id="grammar-question-num">1/10</span></span>
+                </div>
+                
+                <div class="card" style="background:var(--surface-light);">
+                    <div style="font-size:14px; color:var(--accent); margin-bottom:8px;">To'ldiring:</div>
+                    <div style="font-size:20px; font-weight:600; margin-bottom:20px;" id="grammar-question">
+                        "I ___ a student."
+                    </div>
+                    
+                    <div class="options-grid" id="grammar-options">
+                        <!-- Options injected here -->
+                    </div>
+                </div>
+                
+                <div style="margin-top:16px; display:flex; justify-content:space-between; font-size:14px;">
+                    <span style="color:var(--text-dim);">🎯 XP: <span id="grammar-xp" style="color:var(--accent);">0</span></span>
+                    <span style="color:var(--text-dim);">⏱️ <span id="grammar-timer" style="color:white;">45</span>s</span>
+                </div>
+            </div>
+
+            <div id="grammar-end" style="display:none;">
+                <div class="card" style="text-align:center; padding:32px;">
+                    <div style="font-size:64px; margin-bottom:16px;">🎓</div>
+                    <h2 style="font-size:28px; font-weight:800; margin-bottom:8px;">Quiz Yakunlandi!</h2>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin:24px 0;">
+                        <div class="stat-box">
+                            <div class="stat-value" id="grammar-end-score" style="color:var(--accent);">0</div>
+                            <div class="stat-label">💰 XP</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="grammar-end-correct">0/10</div>
+                            <div class="stat-label">✅ To'g'ri</div>
+                        </div>
+                    </div>
+                    
+                    <div id="grammar-feedback" style="padding:16px; background:rgba(16,185,129,0.1); border-radius:12px; margin-bottom:24px;">
+                        <div style="font-size:48px; margin-bottom:8px;">🎉</div>
+                        <div style="font-weight:700; color:var(--secondary);" id="grammar-feedback-text">Ajoyib natija!</div>
+                    </div>
+                    
+                    <button class="btn-action" onclick="restartGrammar()">🔄 QAYTA</button>
+                    <button class="btn-action" style="background:var(--surface-light); margin-top:12px;" onclick="switchNav('quests')">◀️ Orqaga</button>
+                </div>
+            </div>
+        </div>
         <div id="screen-quests" class="screen">
             <h2 style="font-size:24px; font-weight:800; margin-bottom:24px;">Topshiriqlar</h2>
 
@@ -566,15 +787,15 @@
             <div class="card">
                 <div class="quest-item">
                     <div class="quest-icon" style="color:var(--secondary); background:rgba(16,185,129,0.1);"><i
-                            data-lucide="check-circle"></i></div>
+                            data-lucide="book-open"></i></div>
                     <div class="quest-info">
                         <h4>Grammatika Master</h4>
-                        <p>5 ta grammatik darsni yakunlang</p>
+                        <p>Grammatik testlarni ishlang</p>
                     </div>
                 </div>
                 <button class="btn-action" style="background:var(--surface-light); box-shadow:none;"
-                    onclick="botAction('lessons')">
-                    DARSLARGA O'TISH
+                    onclick="switchNav('grammar')">
+                    📖 GRAMMAR QUIZ
                 </button>
             </div>
         </div>
@@ -673,119 +894,250 @@
         document.getElementById('user-id').innerText = "ID: " + user.id;
 
         // --- GAME LOGIC ---
-        // So'zlar bazasi (vocabulary_db.json dan olindi)
-        const VOCAB = [
-            { "en": "Ability", "uz": "Qobiliyat" },
-            { "en": "About", "uz": "Haqida" },
-            { "en": "Accept", "uz": "Qabul qilmoq" },
-            { "en": "Account", "uz": "Hisob" },
-            { "en": "Action", "uz": "Harakat" },
-            { "en": "Activity", "uz": "Faoliyat" },
-            { "en": "Actor", "uz": "Aktyor" },
-            { "en": "Add", "uz": "Qo'shmoq" },
-            { "en": "Address", "uz": "Manzil" },
-            { "en": "Adult", "uz": "Katta yoshli" },
-            { "en": "Advice", "uz": "Maslahat" },
-            { "en": "Afraid", "uz": "Qo'rqqan" },
-            { "en": "Agency", "uz": "Agentlik" },
-            { "en": "Agree", "uz": "Rozi bo'lmoq" },
-            { "en": "Air", "uz": "Havo" },
-            { "en": "Airport", "uz": "Aeroport" },
-            { "en": "Allow", "uz": "Ruxsat bermoq" },
-            { "en": "Almost", "uz": "Deyarli" },
-            { "en": "Alone", "uz": "Yolg'iz" },
-            { "en": "Always", "uz": "Doim" },
-            { "en": "Amazing", "uz": "Ajoyib" },
-            { "en": "Ambition", "uz": "Maqsad" },
-            { "en": "Ancient", "uz": "Qadimiy" },
-            { "en": "Anger", "uz": "G'azab" },
-            { "en": "Animal", "uz": "Hayvon" },
-            { "en": "Answer", "uz": "Javob" },
-            { "en": "Apple", "uz": "Olma" },
-            { "en": "Apply", "uz": "Ariza topshirmoq" },
-            { "en": "Area", "uz": "Hudud" },
-            { "en": "Argue", "uz": "Tortishmoq" },
-            { "en": "Arm", "uz": "Qo'l" },
-            { "en": "Army", "uz": "Armiya" },
-            { "en": "Around", "uz": "Atrofida" },
-            { "en": "Arrive", "uz": "Kelmoq" },
-            { "en": "Art", "uz": "San'at" },
-            { "en": "Article", "uz": "Maqola" },
-            { "en": "Artist", "uz": "Rassom" },
-            { "en": "Ask", "uz": "So'ramoq" },
-            { "en": "Assume", "uz": "Faraz qilmoq" },
-            { "en": "Attack", "uz": "Hujum" },
-            { "en": "Attention", "uz": "Diqqat" },
-            { "en": "Author", "uz": "Muallif" },
-            { "en": "Available", "uz": "Mavjud" },
-            { "en": "Avoid", "uz": "O'zini olib qochmoq" },
-            { "en": "Baby", "uz": "Chaqaloq" },
-            { "en": "Back", "uz": "Orqa" },
-            { "en": "Bad", "uz": "Yomon" },
-            { "en": "Bag", "uz": "Sumka" },
-            { "en": "Ball", "uz": "To'p" },
-            { "en": "Banana", "uz": "Banan" },
-            { "en": "Bank", "uz": "Bank" },
-            { "en": "Bar", "uz": "Bar" },
-            { "en": "Base", "uz": "Asos" },
-            { "en": "Basic", "uz": "Boshlang'ich" },
-            { "en": "Basis", "uz": "Asos" },
-            { "en": "Basket", "uz": "Savat" },
-            { "en": "Battery", "uz": "Batareya" },
-            { "en": "Battle", "uz": "Jang" },
-            { "en": "Beach", "uz": "Sohil" },
-            { "en": "Bear", "uz": "Ayiq" },
-            { "en": "Beat", "uz": "Urmoq" },
-            { "en": "Beautiful", "uz": "Chiroyli" },
-            { "en": "Beauty", "uz": "Go'zallik" },
-            { "en": "Because", "uz": "Chunki" },
-            { "en": "Become", "uz": "Bo'lmoq" },
-            { "en": "Believe", "uz": "Ishonmoq" },
-            { "en": "Collaborate", "uz": "Hamkorlik qilmoq" },
-            { "en": "Determine", "uz": "Aniqlamoq" },
-            { "en": "Effort", "uz": "Harakat/G'ayrat" },
-            { "en": "Flourish", "uz": "Gullab-yashnamoq" },
-            { "en": "Gratitude", "uz": "Minnatdorchilik" },
-            { "en": "Humble", "uz": "Kamtar" },
-            { "en": "Innocent", "uz": "Aybsiz" },
-            { "en": "Journey", "uz": "Sayohat" },
-            { "en": "Knowledge", "uz": "Bilim" },
-            { "en": "Loyal", "uz": "Sodiq" },
-            { "en": "Magnificent", "uz": "Hashamatli" },
-            { "en": "Narrative", "uz": "Hikoya qilish" },
-            { "en": "Obvious", "uz": "Aniq/Ravshan" },
-            { "en": "Patience", "uz": "Sabr-toqat" }
+        // Vocabulary Database with difficulty levels
+        const VOCAB = {
+            easy: [
+                { "en": "Apple", "uz": "Olma" },
+                { "en": "Book", "uz": "Kitob" },
+                { "en": "Car", "uz": "Mashina" },
+                { "en": "Dog", "uz": "It" },
+                { "en": "Cat", "uz": "Mushuk" },
+                { "en": "House", "uz": "Uy" },
+                { "en": "Tree", "uz": "Daraxt" },
+                { "en": "Water", "uz": "Suv" },
+                { "en": "Bread", "uz": "Non" },
+                { "en": "Milk", "uz": "Sut" },
+                { "en": "Sun", "uz": "Quyosh" },
+                { "en": "Moon", "uz": "Oy" },
+                { "en": "Star", "uz": "Yulduz" },
+                { "en": "Ball", "uz": "To'p" },
+                { "en": "Door", "uz": "Eshik" },
+                { "en": "Window", "uz": "Oyna" },
+                { "en": "Hand", "uz": "Qo'l" },
+                { "en": "Foot", "uz": "Oyoq" },
+                { "en": "Eye", "uz": "Ko'z" },
+                { "en": "Ear", "uz": "Quloq" }
+            ],
+            medium: [
+                { "en": "Ability", "uz": "Qobiliyat" },
+                { "en": "Accept", "uz": "Qabul qilmoq" },
+                { "en": "Account", "uz": "Hisob" },
+                { "en": "Action", "uz": "Harakat" },
+                { "en": "Activity", "uz": "Faoliyat" },
+                { "en": "Address", "uz": "Manzil" },
+                { "en": "Advice", "uz": "Maslahat" },
+                { "en": "Agency", "uz": "Agentlik" },
+                { "en": "Agree", "uz": "Rozi bo'lmoq" },
+                { "en": "Airport", "uz": "Aeroport" },
+                { "en": "Answer", "uz": "Javob" },
+                { "en": "Article", "uz": "Maqola" },
+                { "en": "Artist", "uz": "Rassom" },
+                { "en": "Attack", "uz": "Hujum" },
+                { "en": "Author", "uz": "Muallif" },
+                { "en": "Avoid", "uz": "O'zini olib qochmoq" },
+                { "en": "Beautiful", "uz": "Chiroyli" },
+                { "en": "Believe", "uz": "Ishonmoq" },
+                { "en": "Become", "uz": "Bo'lmoq" },
+                { "en": "Knowledge", "uz": "Bilim" }
+            ],
+            hard: [
+                { "en": "Ambition", "uz": "Maqsad" },
+                { "en": "Ancient", "uz": "Qadimiy" },
+                { "en": "Anger", "uz": "G'azab" },
+                { "en": "Argue", "uz": "Tortishmoq" },
+                { "en": "Collaborate", "uz": "Hamkorlik qilmoq" },
+                { "en": "Determine", "uz": "Aniqlamoq" },
+                { "en": "Effort", "uz": "Harakat/G'ayrat" },
+                { "en": "Flourish", "uz": "Gullab-yashnamoq" },
+                { "en": "Gratitude", "uz": "Minnatdorchilik" },
+                { "en": "Humble", "uz": "Kamtar" },
+                { "en": "Innocent", "uz": "Aybsiz" },
+                { "en": "Journey", "uz": "Sayohat" },
+                { "en": "Loyal", "uz": "Sodiq" },
+                { "en": "Magnificent", "uz": "Hashamatli" },
+                { "en": "Narrative", "uz": "Hikoya qilish" },
+                { "en": "Obvious", "uz": "Aniq/Ravshan" },
+                { "en": "Patience", "uz": "Sabr-toqat" },
+                { "en": "Magnificent", "uz": "Hashamatli" },
+                { "en": "Perspective", "uz": "Nuqtai nazr" },
+                { "en": "Principle", "uz": "Prinsip" }
+            ]
+        };
+
+        // Achievements System
+        const ACHIEVEMENTS = [
+            { id: 'first_win', name: '🎮 Birinchi G‘alaba', desc: 'Birinchi o‘yin yutishi', icon: '🎮', require: 1 },
+            { id: 'streak_5', name: '🔥 5 Streak', desc: '5 ta ketma-ket to‘g‘ri javob', icon: '🔥', require: 5 },
+            { id: 'streak_10', name: '💥 10 Streak', desc: '10 ta ketma-ket to‘g‘ri javob', icon: '💥', require: 10 },
+            { id: 'streak_20', name: '⚡ 20 Streak', desc: '20 ta ketma-ket to‘g‘ri javob', icon: '⚡', require: 20 },
+            { id: 'score_100', name: '💰 100 XP', desc: 'Bir o‘yinda 100 XP yig‘ish', icon: '💰', require: 100 },
+            { id: 'score_200', name: '💎 200 XP', desc: 'Bir o‘yinda 200 XP yig‘ish', icon: '💎', require: 200 },
+            { id: 'combo_3', name: '⭐ 3x Combo', desc: '3x combo yig‘ish', icon: '⭐', require: 3 },
+            { id: 'combo_5', name: '🌟 5x Combo', desc: '5x combo yig‘ish', icon: '🌟', require: 5 },
+            { id: 'accuracy_100', name: '🎯 100% Aniqlik', desc: 'Hech qanday xato bo‘lmagan o‘yin', icon: '🎯', require: 100 },
+            { id: 'games_10', name: '🏆 10 O‘yin', desc: '10 ta o‘yin o‘ynash', icon: '🏆', require: 10 }
         ];
 
-        let gameXP = 0;
-        let timeLeft = 60;
-        let timerId = null;
+        // Game State
+        let gameState = {
+            mode: 'classic',
+            difficulty: 'easy',
+            xp: 0,
+            score: 0,
+            streak: 0,
+            maxStreak: 0,
+            combo: 1,
+            maxCombo: 1,
+            correct: 0,
+            wrong: 0,
+            totalQuestions: 0,
+            timeLeft: 60,
+            timerId: null,
+            questionsAnswered: 0,
+            questionsTotal: 10,
+            unlockedAchievements: []
+        };
+
+        // Mode Descriptions
+        const MODE_DESCS = {
+            classic: 'To‘g‘ri javobni tanlang!',
+            speed: 'Tez-tez javob ber!',
+            flash: 'Flash Mode: 30 soniya!'
+        };
+
+        // Difficulty Settings
+        const DIFFICULTY_SETTINGS = {
+            easy: { time: 60, xpBonus: 1, questionCount: 10 },
+            medium: { time: 45, xpBonus: 2, questionCount: 15 },
+            hard: { time: 30, xpBonus: 3, questionCount: 20 }
+        };
+
+        // Sound Effects (using Web Audio API)
+        const sounds = {
+            correct: null,
+            wrong: null,
+            combo: null,
+            achievement: null
+        };
+
+        function initSounds() {
+            // Create simple beep sounds using Web Audio API
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    sounds.correct = () => playTone(800, 'sine', 0.1);
+                    sounds.wrong = () => playTone(200, 'sawtooth', 0.3);
+                    sounds.combo = () => { playTone(600, 'sine', 0.1); setTimeout(() => playTone(800, 'sine', 0.1), 100); };
+                    sounds.achievement = () => { 
+                        playTone(523, 'sine', 0.15); 
+                        setTimeout(() => playTone(659, 'sine', 0.15), 150);
+                        setTimeout(() => playTone(784, 'sine', 0.2), 300);
+                    };
+                }
+            } catch(e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        function playTone(freq, type, duration) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function selectMode(mode) {
+            gameState.mode = mode;
+            document.querySelectorAll('#game-modes .btn-option').forEach(b => b.classList.remove('active'));
+            document.getElementById('mode-' + mode).classList.add('active');
+            document.getElementById('mode-desc').innerText = MODE_DESCS[mode];
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function selectDifficulty(diff) {
+            gameState.difficulty = diff;
+            document.querySelectorAll('#game-difficulty .btn-option').forEach(b => b.classList.remove('active'));
+            document.getElementById('diff-' + diff).classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
 
         function startGame() {
+            const settings = DIFFICULTY_SETTINGS[gameState.difficulty];
+            
+            // Reset state
+            gameState.xp = 0;
+            gameState.score = 0;
+            gameState.streak = 0;
+            gameState.maxStreak = 0;
+            gameState.combo = 1;
+            gameState.maxCombo = 1;
+            gameState.correct = 0;
+            gameState.wrong = 0;
+            gameState.totalQuestions = 0;
+            gameState.questionsAnswered = 0;
+            gameState.questionsTotal = settings.questionCount;
+            gameState.timeLeft = gameState.mode === 'flash' ? 30 : settings.time;
+            
             document.getElementById('game-lobby').style.display = 'none';
+            document.getElementById('game-end').style.display = 'none';
             document.getElementById('game-play').style.display = 'block';
-            gameXP = 0;
-            timeLeft = 60;
-            updateXP(0);
+            
+            updateGameUI();
             startTimer();
             nextRound();
         }
 
         function startTimer() {
-            timerId = setInterval(() => {
-                timeLeft--;
-                document.getElementById('game-timer').innerText = timeLeft;
-                if (timeLeft <= 0) endGame();
+            clearInterval(gameState.timerId);
+            gameState.timerId = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('game-timer').innerText = gameState.timeLeft;
+                
+                // Warning color when low time
+                if (gameState.timeLeft <= 10) {
+                    document.getElementById('game-timer').style.color = '#ef4444';
+                    document.getElementById('game-timer').style.animation = 'pulse 0.5s infinite';
+                }
+                
+                if (gameState.timeLeft <= 0) endGame();
             }, 1000);
         }
 
+        function updateGameUI() {
+            document.getElementById('game-xp').innerText = `+${gameState.xp} XP`;
+            document.getElementById('game-streak').innerText = gameState.streak;
+            document.getElementById('game-combo').innerText = `x${gameState.combo}`;
+            document.getElementById('game-score').innerText = gameState.score;
+            document.getElementById('question-num').innerText = `${gameState.questionsAnswered}/${gameState.questionsTotal}`;
+        }
+
+        function getRandomVocab(difficulty) {
+            const vocab = VOCAB[difficulty] || VOCAB.easy;
+            return vocab[Math.floor(Math.random() * vocab.length)];
+        }
+
         function nextRound() {
-            const current = VOCAB[Math.floor(Math.random() * VOCAB.length)];
+            if (gameState.questionsAnswered >= gameState.questionsTotal) {
+                endGame();
+                return;
+            }
+            
+            const current = getRandomVocab(gameState.difficulty);
             document.getElementById('current-word').innerText = current.en;
 
             const options = [current.uz];
+            const allVocab = [...(VOCAB.easy || []), ...(VOCAB.medium || []), ...(VOCAB.hard || [])];
             while (options.length < 4) {
-                const r = VOCAB[Math.floor(Math.random() * VOCAB.length)].uz;
+                const r = allVocab[Math.floor(Math.random() * allVocab.length)].uz;
                 if (!options.includes(r)) options.push(r);
             }
             options.sort(() => Math.random() - 0.5);
@@ -800,51 +1152,403 @@
                 grid.appendChild(btn);
             });
             lucide.createIcons();
+            
+            gameState.questionsAnswered++;
+            updateGameUI();
         }
 
         function checkAnswer(selected, correct, btn) {
             if (selected === correct) {
+                // Correct Answer
                 btn.classList.add('correct');
                 tg.HapticFeedback.notificationOccurred('success');
-                gameXP += 10;
-                updateXP(gameXP);
+                if (sounds.correct) sounds.correct();
+                
+                gameState.correct++;
+                gameState.streak++;
+                gameState.maxStreak = Math.max(gameState.maxStreak, gameState.streak);
+                
+                // Combo system
+                if (gameState.streak >= 3) {
+                    gameState.combo = Math.min(5, Math.floor(gameState.streak / 3) + 1);
+                    gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+                    showCombo(gameState.combo);
+                    if (sounds.combo) sounds.combo();
+                }
+                
+                // Calculate XP
+                const settings = DIFFICULTY_SETTINGS[gameState.difficulty];
+                const baseXP = 10;
+                const comboBonus = gameState.combo > 1 ? (gameState.combo - 1) * 5 : 0;
+                const xpEarned = (baseXP + comboBonus) * settings.xpBonus;
+                gameState.xp += xpEarned;
+                gameState.score += xpEarned;
+                
+                // Show score popup
+                showScorePopup(`+${xpEarned}`);
+                
+                updateGameUI();
                 setTimeout(nextRound, 500);
             } else {
+                // Wrong Answer
                 btn.classList.add('wrong');
-                document.getElementById('game-play').classList.add('shake');
                 tg.HapticFeedback.notificationOccurred('error');
-                setTimeout(() => {
-                    document.getElementById('game-play').classList.remove('shake');
-                    nextRound();
-                }, 500);
+                if (sounds.wrong) sounds.wrong();
+                
+                gameState.wrong++;
+                gameState.streak = 0;
+                gameState.combo = 1;
+                
+                // Highlight correct answer
+                document.querySelectorAll('.btn-option').forEach(b => {
+                    if (b.innerText.includes(correct)) {
+                        b.classList.add('correct');
+                    }
+                });
+                
+                updateGameUI();
+                setTimeout(nextRound, 800);
             }
         }
 
-        function updateXP(val) {
-            document.getElementById('game-xp').innerText = `+${val} XP`;
+        function showScorePopup(text) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.innerText = text;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        function showCombo(combo) {
+            const display = document.getElementById('combo-display');
+            display.innerText = `${combo}x COMBO!`;
+            display.classList.add('active');
+            setTimeout(() => display.classList.remove('active'), 800);
         }
 
         function endGame() {
-            clearInterval(timerId);
+            clearInterval(gameState.timerId);
             tg.HapticFeedback.impactOccurred('heavy');
-
-            // Show confirmation dialog with SweetAlert-like system or standard confirm
-            const shouldSave = confirm(`O'yin tugadi! 🎉\nTopilgan daromad: ${gameXP} XP.\n\nNatijani bot profiliga saqlaymizmi?`);
-
-            if (shouldSave) {
-                // Send data to Bot
-                tg.sendData(JSON.stringify({
-                    action: "game_end",
-                    xp: gameXP
-                }));
-                // tg.close() happens automatically after sendData usually, or we can close manually
-                // But typically sendData closes the WebApp.
+            
+            // Calculate accuracy
+            const total = gameState.correct + gameState.wrong;
+            const accuracy = total > 0 ? Math.round((gameState.correct / total) * 100) : 0;
+            
+            // Check achievements
+            const newAchievements = checkAchievements(accuracy);
+            
+            // Update end screen
+            document.getElementById('game-play').style.display = 'none';
+            document.getElementById('game-end').style.display = 'block';
+            
+            document.getElementById('end-score').innerText = gameState.xp;
+            document.getElementById('end-accuracy').innerText = `${accuracy}%`;
+            document.getElementById('end-streak').innerText = gameState.maxStreak;
+            
+            // Determine rank
+            let rank = '🥉 Bronze';
+            if (gameState.xp >= 200) rank = '🥈 Silver';
+            if (gameState.xp >= 300) rank = '🥇 Gold';
+            if (gameState.xp >= 500) rank = '💎 Diamond';
+            if (gameState.xp >= 1000) rank = '👑 Legend';
+            document.getElementById('end-level').innerText = rank;
+            
+            // Show achievement if unlocked
+            const achDisplay = document.getElementById('achievement-unlock');
+            if (newAchievements.length > 0) {
+                achDisplay.style.display = 'block';
+                document.getElementById('achievement-name').innerText = newAchievements[0].name;
+                if (sounds.achievement) sounds.achievement();
             } else {
-                gameXP = 0;
-                document.getElementById('game-lobby').style.display = 'block';
-                document.getElementById('game-play').style.display = 'none';
+                achDisplay.style.display = 'none';
+            }
+            
+            // Send data to bot
+            tg.sendData(JSON.stringify({
+                action: "game_end",
+                xp: gameState.xp,
+                score: gameState.score,
+                accuracy: accuracy,
+                streak: gameState.maxStreak,
+                achievements: newAchievements.map(a => a.id)
+            }));
+        }
+
+        function checkAchievements(accuracy) {
+            const newUnlocked = [];
+            
+            // Check each achievement
+            ACHIEVEMENTS.forEach(ach => {
+                let unlocked = false;
+                
+                switch(ach.id) {
+                    case 'first_win':
+                        unlocked = gameState.correct + gameState.wrong > 0;
+                        break;
+                    case 'streak_5':
+                        unlocked = gameState.maxStreak >= 5;
+                        break;
+                    case 'streak_10':
+                        unlocked = gameState.maxStreak >= 10;
+                        break;
+                    case 'streak_20':
+                        unlocked = gameState.maxStreak >= 20;
+                        break;
+                    case 'score_100':
+                        unlocked = gameState.xp >= 100;
+                        break;
+                    case 'score_200':
+                        unlocked = gameState.xp >= 200;
+                        break;
+                    case 'combo_3':
+                        unlocked = gameState.maxCombo >= 3;
+                        break;
+                    case 'combo_5':
+                        unlocked = gameState.maxCombo >= 5;
+                        break;
+                    case 'accuracy_100':
+                        unlocked = accuracy === 100 && gameState.totalQuestions >= 5;
+                        break;
+                }
+                
+                if (unlocked && !gameState.unlockedAchievements.includes(ach.id)) {
+                    newUnlocked.push(ach);
+                    gameState.unlockedAchievements.push(ach.id);
+                }
+            });
+            
+            return newUnlocked;
+        }
+
+        function restartGame() {
+            document.getElementById('game-end').style.display = 'none';
+            document.getElementById('game-lobby').style.display = 'block';
+            document.getElementById('game-timer').style.color = 'white';
+            document.getElementById('game-timer').style.animation = 'none';
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        // Initialize sounds on first interaction
+        document.addEventListener('click', () => {
+            if (!sounds.correct) initSounds();
+        }, { once: true });
+
+        // --- GRAMMAR QUIZ ---
+        const GRAMMAR_QUESTIONS = {
+            easy: [
+                { q: "I ___ a student.", o: ["am", "is", "are", "be"], a: "am" },
+                { q: "She ___ TV every day.", o: ["watch", "watches", "watching", "watched"], a: "watches" },
+                { q: "They ___ to school yesterday.", o: ["go", "goes", "went", "going"], a: "went" },
+                { q: "He ___ a book now.", o: ["read", "reads", "reading", "readed"], a: "reading" },
+                { q: "We ___ English every day.", o: ["study", "studies", "studying", "studied"], a: "study" },
+                { q: "She ___ to the store yesterday.", o: ["go", "goes", "went", "gone"], a: "went" },
+                { q: "I ___ my homework.", o: ["do", "does", "did", "doing"], a: "do" },
+                { q: "The cat ___ on the bed.", o: ["sleep", "sleeps", "sleeping", "slept"], a: "sleeps" }
+            ],
+            medium: [
+                { q: "Where ___ you go yesterday?", o: ["do", "does", "did", "done"], a: "did" },
+                { q: "I have ___ to London twice.", o: ["go", "went", "gone", "been"], a: "been" },
+                { q: "If I ___ a million dollars, I would buy a car.", o: ["have", "had", "has", "will have"], a: "had" },
+                { q: "I wish I ___ more time.", o: ["have", "has", "had", "having"], a: "had" },
+                { q: "By next year, I ___ my degree.", o: ["finish", "will finish", "will have finished", "finished"], a: "will have finished" },
+                { q: "She ___ for 2 hours.", o: ["is sleeping", "has been sleeping", "slept", "sleeps"], a: "has been sleeping" },
+                { q: "The movie ___ by the time we arrived.", o: ["started", "had started", "has started", "was starting"], a: "had started" },
+                { q: "If he ___ here, he would help us.", o: ["was", "is", "were", "had been"], a: "were" }
+            ],
+            hard: [
+                { q: "Hardly ___ I entered the room when it started raining.", o: ["had", "did", "was", "have"], a: "had" },
+                { q: "It is essential that he ___ here.", o: ["is", "be", "was", "were"], a: "be" },
+                { q: "He is second to ___ in mathematics.", o: ["none", "no one", "nobody", "nothing"], a: "none" },
+                { q: "Not only ___ the work, but he also finished early.", o: ["he did", "did he", "he finished", "finished he"], a: "did he" },
+                { q: "Were it not for his help, I ___ the work.", o: ["would fail", "will fail", "would have failed", "fail"], a: "would have failed" },
+                { q: "She is the only one ___ the answer.", o: ["who knows", "knows", "who know", "knowing"], a: "who knows" },
+                { q: "I look forward to ___ from you soon.", o: ["hear", "hearing", "heard", "have heard"], a: "hearing" },
+                { q: "But for the rain, we ___ earlier.", o: ["would arrive", "will arrive", "would have arrived", "arrive"], a: "would have arrived" }
+            ]
+        };
+
+        let grammarState = {
+            difficulty: 'easy',
+            xp: 0,
+            correct: 0,
+            wrong: 0,
+            timeLeft: 45,
+            timerId: null,
+            questionsAnswered: 0,
+            questionsTotal: 10
+        };
+
+        function selectGrammarDiff(diff) {
+            grammarState.difficulty = diff;
+            document.querySelectorAll('#grammar-difficulty .btn-option').forEach(b => b.classList.remove('active'));
+            document.getElementById('grammar-diff-' + diff).classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function startGrammarQuiz() {
+            // Reset state
+            grammarState.xp = 0;
+            grammarState.correct = 0;
+            grammarState.wrong = 0;
+            grammarState.questionsAnswered = 0;
+            grammarState.timeLeft = grammarState.difficulty === 'easy' ? 60 : grammarState.difficulty === 'medium' ? 45 : 30;
+            
+            document.getElementById('grammar-lobby').style.display = 'none';
+            document.getElementById('grammar-end').style.display = 'none';
+            document.getElementById('grammar-play').style.display = 'block';
+            
+            document.getElementById('grammar-xp').innerText = '0';
+            startGrammarTimer();
+            nextGrammarQuestion();
+        }
+
+        function startGrammarTimer() {
+            clearInterval(grammarState.timerId);
+            document.getElementById('grammar-timer').innerText = grammarState.timeLeft;
+            grammarState.timerId = setInterval(() => {
+                grammarState.timeLeft--;
+                document.getElementById('grammar-timer').innerText = grammarState.timeLeft;
+                if (grammarState.timeLeft <= 0) endGrammarQuiz();
+            }, 1000);
+        }
+
+        function nextGrammarQuestion() {
+            if (grammarState.questionsAnswered >= grammarState.questionsTotal) {
+                endGrammarQuiz();
+                return;
+            }
+            
+            const questions = GRAMMAR_QUESTIONS[grammarState.difficulty] || GRAMMAR_QUESTIONS.easy;
+            const current = questions[Math.floor(Math.random() * questions.length)];
+            
+            document.getElementById('grammar-question').innerText = `"${current.q}"`;
+            document.getElementById('grammar-question-num').innerText = `${grammarState.questionsAnswered + 1}/${grammarState.questionsTotal}`;
+            
+            const grid = document.getElementById('grammar-options');
+            grid.innerHTML = '';
+            
+            current.o.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerHTML = `${opt}`;
+                btn.onclick = () => checkGrammarAnswer(opt, current.a, btn);
+                grid.appendChild(btn);
+            });
+            
+            grammarState.questionsAnswered++;
+        }
+
+        function checkGrammarAnswer(selected, correct, btn) {
+            clearInterval(grammarState.timerId);
+            
+            if (selected === correct) {
+                btn.classList.add('correct');
+                tg.HapticFeedback.notificationOccurred('success');
+                if (sounds.correct) sounds.correct();
+                
+                grammarState.correct++;
+                const xpEarned = 15;
+                grammarState.xp += xpEarned;
+                document.getElementById('grammar-xp').innerText = grammarState.xp;
+                
+                setTimeout(() => {
+                    startGrammarTimer();
+                    nextGrammarQuestion();
+                }, 800);
+            } else {
+                btn.classList.add('wrong');
+                tg.HapticFeedback.notificationOccurred('error');
+                if (sounds.wrong) sounds.wrong();
+                
+                grammarState.wrong++;
+                
+                // Highlight correct answer
+                document.querySelectorAll('#grammar-options .btn-option').forEach(b => {
+                    if (b.innerText === correct) {
+                        b.classList.add('correct');
+                    }
+                });
+                
+                setTimeout(() => {
+                    startGrammarTimer();
+                    nextGrammarQuestion();
+                }, 1200);
             }
         }
+
+        function endGrammarQuiz() {
+            clearInterval(grammarState.timerId);
+            tg.HapticFeedback.impactOccurred('heavy');
+            
+            document.getElementById('grammar-play').style.display = 'none';
+            document.getElementById('grammar-end').style.display = 'block';
+            
+            document.getElementById('grammar-end-score').innerText = grammarState.xp;
+            document.getElementById('grammar-end-correct').innerText = `${grammarState.correct}/${grammarState.questionsTotal}`;
+            
+            const feedbackEl = document.getElementById('grammar-feedback');
+            const feedbackText = document.getElementById('grammar-feedback-text');
+            const percentage = (grammarState.correct / grammarState.questionsTotal) * 100;
+            
+            if (percentage >= 90) {
+                feedbackEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                feedbackText.innerText = '🎉 Ajoyib! Siz grammatika dahosi! ';
+            } else if (percentage >= 70) {
+                feedbackEl.style.background = 'rgba(139, 92, 246, 0.2)';
+                feedbackText.innerText = '👍 Yaxshi natija! Davom eting! ';
+            } else if (percentage >= 50) {
+                feedbackEl.style.background = 'rgba(245, 158, 11, 0.2)';
+                feedbackText.innerText = '📚 Yaxshilanish kerak! ';
+            } else {
+                feedbackEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                feedbackText.innerText = "💪 Kopiroq mashq qiling!";
+            }
+            
+            // Send data to bot
+            tg.sendData(JSON.stringify({
+                action: "grammar_end",
+                xp: grammarState.xp,
+                correct: grammarState.correct,
+                total: grammarState.questionsTotal
+            }));
+        }
+
+        function restartGrammar() {
+            document.getElementById('grammar-end').style.display = 'none';
+            document.getElementById('grammar-lobby').style.display = 'block';
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        // Initialize date for daily challenges
+        const today = new Date();
+        const options = { day: 'numeric', month: 'short' };
+        document.getElementById('today-date') && (document.getElementById('today-date').innerText = today.toLocaleDateString('uz-UZ', options));
+
+        // Daily Challenge System
+        const DAILY_CHALLENGES = [
+            { id: 'play_3', name: "3 ta o'yin o'ynang", target: 3, xp: 500, icon: '🎮' },
+            { id: 'streak_5', name: "5 ta ketma-ket to'g'ri javob", target: 5, xp: 300, icon: '🔥' },
+            { id: 'grammar_5', name: "5 ta grammatik savol", target: 5, xp: 400, icon: '📝' },
+            { id: 'xp_100', name: "100 XP yig'ing", target: 100, xp: 300, icon: '💰' }
+        ];
+
+        let dailyProgress = { plays: 0, streak: 0, grammar: 0, xp: 0 };
+
+        function updateDailyChallenges() {
+            const challenge = DAILY_CHALLENGES[0]; // Use first challenge for demo
+            const progress = Math.min(dailyProgress.plays, challenge.target);
+            const percentage = Math.round((progress / challenge.target) * 100);
+            
+            document.getElementById('daily-progress') && (document.getElementById('daily-progress').innerText = `${progress}/${challenge.target}`);
+            document.getElementById('daily-progress-bar') && (document.getElementById('daily-progress-bar').style.width = `${percentage}%`);
+            
+            // Update time remaining
+            const hoursLeft = 24 - today.getHours();
+            document.getElementById('daily-time') && (document.getElementById('daily-time').innerText = `${hoursLeft} soat`);
+        }
+
+        // Initialize daily challenges
+        updateDailyChallenges();
 
         // --- NAVIGATION ---
         function switchNav(screenId) {
